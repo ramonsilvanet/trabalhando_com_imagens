@@ -1,3 +1,4 @@
-*.txt
+devkit-1.0/data/
 annotations/
 *.ipynb_checkpoints
+spring10_urls.txt

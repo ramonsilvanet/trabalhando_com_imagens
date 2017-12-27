@@ -1,8 +1,9 @@
+import sys
 import pandas as pd
 import numpy as np
 import urllib.request
 import mysql.connector
-import sys
+import urllib.error
 
 
 df = pd.read_csv('annotations/winter11_urls.txt', header=None, names=["img_id", "url"], sep="\t")
@@ -14,8 +15,7 @@ def download(img_id, url):
 
 	filename = "{}.jpg".format(img_id)
 	file_path = "../dataset/images/{}".format(filename)
-	print(file_path, url)
-
+	
 	try:
 		with urllib.request.urlopen(url) as response, open(file_path, 'wb') as out_file:
 			data = response.read()
@@ -23,6 +23,8 @@ def download(img_id, url):
 			save_url(url, filename, img_id)
 	except mysql.connector.Error as err:
 		print("Something went wrong: {}".format(err))
+	except urllib.error.URLError as err:
+		print("Download error: {}".format(err))
 	except:
 		print("Unexpected error:", sys.exc_info()[0])
 
@@ -39,15 +41,15 @@ cnx = mysql.connector.connect(user='root', password='secret',
 
 cursor = cnx.cursor()
 
-query = ("SELECT img_id, wnid FROM annotations")
-cursor.execute(query)
+
+data = pd.read_csv('data/annotations.txt', header=None, names=["img_id", "wnid", "url", "filename", "attributes"])  
 
 print("database loaded")
 
-i = 0
+tam = data['img_id'].count()
 
-for (img_id, wnid) in cursor:
-	i = i + 1
+for i in range(0,tam):	
+	img_id = data['img_id'][i]	
 	print(">>>", i, img_id)
 	index = df.loc[ df['img_id'] == img_id]
 	download(img_id, index['url'].values[0])
